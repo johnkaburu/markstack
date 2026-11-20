@@ -1,84 +1,372 @@
-.card-container {
-  display: grid;
-  padding: 10px 30px;
-  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+// Hover effects are wrapped in (hover: hover) so taps on touch screens don't
+// leave a card stuck in its hover state.
 
-  .card-body {
-    height: 25vh;
-    margin: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
-    background: rgba(255, 255, 255, 0);
-    border-radius: 20px;
-    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgb(66, 64, 64);
-    transition: 0.3s;
+// ---- Arrow swap (shared) -------------------------------------------------
 
-    &:hover .card-text {
-      opacity: 1;
-    }
+.arrow {
+  position: relative;
+  display: inline-block;
+  flex: none;
+  overflow: hidden;
 
-    &:hover .card-image {
-      opacity: 0.05;
-    }
+  svg {
+    position: absolute;
+    inset: 0;
+    transition: transform 0.45s var(--ease-out);
 
-    &:hover {
-      border: 1px solid rgb(255, 255, 255);
-    }
-
-    .card-image {
-      position: relative; /* Ensure child elements are positioned relative to this div */
-      overflow: hidden;
-      transition: ease-out 0.25s;
-      width: 100%; /* Ensure the image div takes the full width of the card */
-      height: 100%; /* Ensure the image div takes the full height of the card */
-
-      img {
-        opacity: 1;
-        height: 100%;
-        width: 100%;
-        object-fit: cover;
-        display: block; /* Ensures the image behaves as a block element */
-      }
-
-      /* Optional: Style for the loading image */
-      .loading-image {
-        position: absolute; /* Ensures the loading image is positioned relative to the card-image div */
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%); /* Center the loading image */
-        width: auto;
-        height: auto;
-      }
-    }
-
-    .card-text {
-      font-size: 20px;
-      opacity: 0;
-      position: absolute;
-      padding: 10px;
-      text-align: center;
-      transition: ease-out 0.25s;
-      width: auto;
-
-      .card-name {
-        overflow: auto;
-        font-weight: 1500;
-
-        .card-heading {
-          font-size: 30px;
-        }
-      }
-
-      .card-description {
-        color: rgb(187, 187, 189);
-        display: flex;
-        flex-wrap: wrap;
-      }
+    &:last-child {
+      transform: translate(-110%, 110%);
     }
   }
+}
+
+@mixin arrow-swap {
+  .arrow svg {
+    &:first-child {
+      transform: translate(110%, -110%);
+    }
+
+    &:last-child {
+      transform: translate(0, 0);
+      transition-delay: 0.06s;
+    }
+  }
+}
+
+// ---- Grid item entrance ---------------------------------------------------
+// Played when the parent .section gets .is-in (scrolled into view, or the list
+// was remounted by a category switch). --i staggers the cards.
+
+.grid__item {
+  opacity: 0;
+  transform: translateY(18px) scale(0.985);
+
+  > * {
+    height: 100%;
+  }
+
+  .is-in & {
+    animation: card-in 0.6s var(--ease-out) both;
+    animation-delay: calc(var(--i, 0) * 45ms + 80ms);
+  }
+}
+
+@keyframes card-in {
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+// ---- Screenshot card ---------------------------------------------------
+
+.card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-raised);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+  isolation: isolate;
+  transition:
+    transform 0.45s var(--ease-out),
+    border-color 0.3s ease,
+    box-shadow 0.45s var(--ease-out);
+
+  &:active {
+    transform: translateY(-1px) scale(0.99);
+    transition-duration: 0.12s;
+  }
+}
+
+@media (hover: hover) {
+  .card:hover {
+    transform: translateY(-5px);
+    border-color: color-mix(in srgb, var(--accent) 45%, var(--line-strong));
+    box-shadow:
+      0 22px 40px -24px rgba(0, 0, 0, 0.9),
+      0 0 0 1px color-mix(in srgb, var(--accent) 12%, transparent);
+
+    // Pan down the screenshot like scrolling the site, with a slight push-in.
+    .card__media img.is-loaded {
+      object-position: 50% 100%;
+      transform: scale(1.04);
+      transition:
+        opacity 0.35s ease,
+        object-position 3.2s cubic-bezier(0.45, 0, 0.4, 1),
+        transform 1.2s var(--ease-out);
+    }
+
+    .card__progress {
+      transform: scaleX(1);
+      transition: transform 3.2s cubic-bezier(0.45, 0, 0.4, 1);
+    }
+
+    .card__title span {
+      background-size: 100% 1px;
+    }
+
+    .card__host {
+      color: var(--accent);
+    }
+
+    @include arrow-swap;
+  }
+}
+
+.card:focus-visible {
+  border-color: var(--accent);
+
+  .card__title span {
+    background-size: 100% 1px;
+  }
+}
+
+.card__media {
+  position: relative;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  background: var(--bg-sunken);
+  border-bottom: 1px solid var(--line);
+
+  img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: 50% 0; // screenshots are of page tops; keep the header
+    opacity: 0;
+    // Returning from hover is quicker than the pan itself.
+    transition:
+      opacity 0.35s ease,
+      object-position 0.7s var(--ease-out),
+      transform 0.7s var(--ease-out);
+
+    &.is-loaded {
+      opacity: 1;
+    }
+  }
+
+  // A soft shade at the bottom edge so the progress bar always reads.
+  &::after {
+    content: "";
+    position: absolute;
+    inset: auto 0 0;
+    height: 30%;
+    background: linear-gradient(transparent, rgba(0, 0, 0, 0.18));
+    pointer-events: none;
+  }
+}
+
+.card__progress {
+  position: absolute;
+  inset: auto 0 0;
+  z-index: 1;
+  height: 2px;
+  background: var(--accent);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.4s var(--ease-out);
+}
+
+.card__body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px 16px 16px;
+}
+
+.card__title {
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: -0.005em;
+
+  // Underline that draws in from the left on hover.
+  span {
+    background-image: linear-gradient(currentColor, currentColor);
+    background-repeat: no-repeat;
+    background-position: 0 100%;
+    background-size: 0 1px;
+    transition: background-size 0.45s var(--ease-out);
+  }
+}
+
+.card__desc {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  line-height: 1.45;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+
+  &::first-letter {
+    text-transform: uppercase; // a lot of descriptions in the data start lowercase
+  }
+}
+
+.card__host {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: auto;
+  padding-top: 6px;
+  color: var(--text-faint);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  transition: color 0.3s ease;
+}
+
+// ---- Placeholder tile --------------------------------------------------
+
+.placeholder {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  background:
+    radial-gradient(circle at 30% 20%, color-mix(in srgb, var(--tone) 18%, transparent), transparent 60%),
+    color-mix(in srgb, var(--tone) 7%, var(--bg-sunken));
+  transition: transform 0.7s var(--ease-out);
+}
+
+@media (hover: hover) {
+  .card:hover .placeholder {
+    transform: scale(1.04);
+  }
+}
+
+.placeholder__initial {
+  font-family: var(--font-display);
+  font-size: clamp(2.75rem, 6vw, 3.75rem);
+  font-weight: 700;
+  line-height: 1;
+  color: color-mix(in srgb, var(--tone) 85%, var(--text));
+}
+
+.placeholder__host {
+  color: color-mix(in srgb, var(--tone) 55%, var(--text-faint));
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.02em;
+}
+
+// ---- Channel row (YouTube) ---------------------------------------------
+
+.channel {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px 10px 10px;
+  background: var(--bg-raised);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+  isolation: isolate;
+  transition: border-color 0.3s ease, transform 0.12s ease;
+
+  // A tint that sweeps in from the left on hover.
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: linear-gradient(90deg, var(--accent-soft), transparent 85%);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.5s var(--ease-out);
+  }
+
+  &:active {
+    transform: scale(0.985);
+  }
+
+  &:focus-visible {
+    border-color: var(--accent);
+  }
+}
+
+@media (hover: hover) {
+  .channel:hover {
+    border-color: color-mix(in srgb, var(--accent) 40%, var(--line-strong));
+
+    &::before {
+      transform: scaleX(1);
+    }
+
+    .channel__avatar {
+      transform: scale(1.08) rotate(-4deg);
+      box-shadow: 0 0 0 2px var(--bg-raised), 0 0 0 3px var(--accent);
+    }
+
+    .channel__handle {
+      color: var(--text-muted);
+    }
+
+    .channel__arrow {
+      color: var(--accent);
+    }
+
+    @include arrow-swap;
+  }
+}
+
+.channel__avatar {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: var(--bg-sunken);
+  transition:
+    transform 0.5s var(--ease-spring),
+    box-shadow 0.3s ease;
+}
+
+.channel__avatar--fallback {
+  display: grid;
+  place-items: center;
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.channel__text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.channel__name {
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.channel__handle {
+  color: var(--text-faint);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: color 0.3s ease;
+}
+
+.channel__arrow {
+  display: flex;
+  flex: none;
+  margin-left: auto;
+  color: var(--text-faint);
+  transition: color 0.3s ease;
 }

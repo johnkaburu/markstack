@@ -1,54 +1,212 @@
-body {	
-    color: white;
-    background: rgb(14, 13, 13);
-    // background: linear-gradient(90deg, rgba(29,28,28,1) 0%, rgba(48,47,47,1) 30%, rgba(66,67,69,1) 50%, rgba(37,33,33,1) 70%, rgba(15,14,14,1) 100%);     
+// ---- Header --------------------------------------------------------------
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 64px;
 }
-@font-face {
-    font-family: 'logo';
-    src: url('../fonts/Royalacid_o.ttf') format('truetype'),
-    /* Add additional formats if necessary */
+
+.wordmark {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.wordmark__mark {
+  width: 12px;
+  height: 17px;
+  fill: var(--accent);
+  margin-top: -3px; // ribbon hangs from the cap height, like a real one
+}
+
+.header__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  transition: color 0.15s ease, border-color 0.15s ease;
+
+  &:hover {
+    color: var(--text);
+    border-color: var(--line-strong);
   }
-  @font-face {
-    font-family: 'oldlondon';
-    src: url('../fonts/PlayfairDisplay.ttf') format('truetype'),
-    /* Add additional formats if necessary */
+}
+
+// ---- Hero ----------------------------------------------------------------
+
+.hero {
+  padding-block: clamp(48px, 9vw, 104px) clamp(40px, 6vw, 72px);
+}
+
+.hero__eyebrow {
+  margin-bottom: 20px;
+  color: var(--text-faint);
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  letter-spacing: 0.02em;
+}
+
+.hero__title {
+  max-width: 14ch;
+  font-family: var(--font-display);
+  font-size: clamp(2.6rem, 7vw, 5rem);
+  font-weight: 600;
+  line-height: 1.02;
+  letter-spacing: -0.025em;
+}
+
+// A hand-drawn-ish marker stroke under the key phrase.
+.hero__underline {
+  background-image: linear-gradient(rgba(226, 103, 63, 0.4), rgba(226, 103, 63, 0.4));
+  background-repeat: no-repeat;
+  background-size: 100% 0.1em;
+  background-position: 0 92%;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+.hero__lead {
+  max-width: 58ch;
+  margin-top: 24px;
+  color: var(--text-muted);
+  font-size: clamp(1rem, 1.6vw, 1.125rem);
+  line-height: 1.6;
+}
+
+// ---- Footer --------------------------------------------------------------
+
+.footer {
+  border-top: 1px solid var(--line);
+  color: var(--text-muted);
+  font-size: 0.9rem;
+
+  a {
+    color: var(--text);
+    text-decoration: underline;
+    text-decoration-color: var(--line-strong);
+    text-underline-offset: 3px;
+    transition: text-decoration-color 0.15s ease;
+
+    &:hover {
+      text-decoration-color: var(--accent);
+    }
   }
-.main-children{
-    // background-color: red;
 }
-.navbar-container{
-    inset:0;
-    display: flex;
-    color: white;
-    padding: 0 30px;
-    font-size: 30px;
-    align-items: center;
-    text-decoration: none;
-    justify-content: space-between;
-    border-bottom: 1px solid rgb(83, 82, 82);
-    font-family: 'oldlondon', sans-serif;
+
+.footer__inner {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px 24px;
+  padding-block: 28px 36px;
 }
-.landing-container{
-    display: flex;
-    object-fit: contain;
-    overflow: hidden;
-    padding: 50px 0;
-    padding-bottom: 120px;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    .landing-title{
-        text-align: center;
-        font-size: 80px;
-        font-weight: 900;
-        padding-bottom: 20px;
-        font-family: 'oldlondon', sans-serif;
+
+.footer__meta {
+  color: var(--text-faint);
+  font-size: 0.8rem;
+}
+
+// ---- Page-load entrance ----------------------------------------------------
+// Header and hero rise in once, top to bottom. The underline draws after the
+// headline has landed.
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.header {
+  animation: rise 0.7s var(--ease-out) both;
+}
+
+.hero__eyebrow,
+.hero__title,
+.hero__lead {
+  animation: rise 0.9s var(--ease-out) both;
+}
+
+.hero__eyebrow {
+  animation-delay: 0.1s;
+}
+
+.hero__title {
+  animation-delay: 0.18s;
+}
+
+.hero__lead {
+  animation-delay: 0.3s;
+}
+
+.hero__underline {
+  animation: underline-in 0.9s var(--ease-out) 0.75s both;
+}
+
+@keyframes underline-in {
+  from {
+    background-size: 0% 0.1em;
+  }
+  to {
+    background-size: 100% 0.1em;
+  }
+}
+
+// ---- Back to top -----------------------------------------------------------
+
+.to-top {
+  position: fixed;
+  right: var(--gutter);
+  bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 1px solid var(--line-strong);
+  border-radius: 50%;
+  background: var(--bg-raised);
+  color: var(--text-muted);
+  cursor: pointer;
+  opacity: 0;
+  transform: translateY(12px) scale(0.9);
+  pointer-events: none;
+  transition:
+    opacity 0.3s ease,
+    transform 0.4s var(--ease-out),
+    color 0.2s ease,
+    border-color 0.2s ease;
+
+  &.is-visible {
+    opacity: 1;
+    transform: none;
+    pointer-events: auto;
+  }
+
+  svg {
+    transition: transform 0.4s var(--ease-spring);
+  }
+
+  &:hover {
+    color: var(--text);
+    border-color: var(--accent);
+
+    svg {
+      transform: translateY(-3px);
     }
-    .landing-text{
-        text-align: center;
-        width: 50vw;
-        font-size: 25px;
-        color: rgb(206, 198, 198);
-        font-family: 'oldlondon', sans-serif;
-    }
+  }
 }

@@ -9,4 +9,10 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  css: {
+    preprocessorOptions: {
+      // Use Dart Sass's modern API (silences the legacy-js-api deprecation warning).
+      scss: { api: "modern-compiler" },
+    },
+  },
 })
