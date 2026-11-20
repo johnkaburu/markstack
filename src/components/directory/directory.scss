@@ -1,0 +1,329 @@
+// ---- Sticky filter bar ---------------------------------------------------
+
+.filter-bar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: color-mix(in srgb, var(--bg) 92%, transparent);
+  backdrop-filter: saturate(140%) blur(8px);
+  -webkit-backdrop-filter: saturate(140%) blur(8px);
+  border-block: 1px solid var(--line);
+}
+
+.filter-bar__inner {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-height: 56px;
+}
+
+.shelves {
+  position: relative; // the sliding pill is positioned against this
+  display: flex;
+  flex: 1;
+  gap: 2px;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+  // Fade the right edge so it's obvious the row scrolls on small screens.
+  mask-image: linear-gradient(to right, #000 calc(100% - 24px), transparent);
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+// Sliding highlight behind the active category. Its position and width are set
+// from Directory.tsx; transitions only switch on after the first placement.
+.shelves__pill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  border-radius: 999px;
+  background: var(--text);
+  pointer-events: none;
+
+  &.is-ready {
+    transition:
+      transform 0.5s var(--ease-out),
+      width 0.5s var(--ease-out);
+  }
+}
+
+.shelf {
+  position: relative;
+  z-index: 1;
+  flex: none;
+  padding: 7px 12px;
+  border: 0;
+  border-radius: 999px;
+  background: none;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    color 0.3s ease,
+    transform 0.12s ease;
+
+  &:hover:not(:disabled) {
+    color: var(--text);
+  }
+
+  &:active:not(:disabled) {
+    transform: scale(0.95);
+  }
+
+  &[aria-pressed="true"],
+  &[aria-pressed="true"]:hover {
+    color: var(--bg);
+
+    .shelf__count {
+      color: color-mix(in srgb, var(--bg) 60%, transparent);
+    }
+  }
+
+  &:disabled {
+    color: var(--text-faint);
+    cursor: default;
+    opacity: 0.6;
+  }
+}
+
+.shelf__count {
+  display: inline-block;
+  margin-left: 2px;
+  transition: color 0.3s ease;
+  color: var(--text-faint);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  vertical-align: 1px;
+}
+
+.search {
+  position: relative;
+  display: flex;
+  flex: none;
+  align-items: center;
+  width: 220px;
+
+  input {
+    width: 100%;
+    height: 36px;
+    padding: 0 34px 0 34px;
+    background: var(--bg-raised);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    font-size: 0.9rem;
+    transition: border-color 0.15s ease;
+
+    &::placeholder {
+      color: var(--text-faint);
+    }
+
+    &:focus {
+      outline: none;
+      border-color: var(--text-faint);
+    }
+
+    &::-webkit-search-cancel-button {
+      display: none;
+    }
+  }
+}
+
+.search__icon {
+  position: absolute;
+  left: 11px;
+  color: var(--text-faint);
+  pointer-events: none;
+}
+
+.search__hint,
+.search__clear {
+  position: absolute;
+  right: 8px;
+}
+
+.search__hint {
+  padding: 1px 6px;
+  border: 1px solid var(--line-strong);
+  border-radius: 4px;
+  color: var(--text-faint);
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  pointer-events: none;
+}
+
+.search__clear {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 0;
+  border-radius: 4px;
+  background: none;
+  color: var(--text-muted);
+  cursor: pointer;
+
+  &:hover {
+    background: var(--line);
+    color: var(--text);
+  }
+}
+
+@media (max-width: 720px) {
+  .filter-bar__inner {
+    flex-direction: column-reverse;
+    align-items: stretch;
+    gap: 8px;
+    padding-block: 10px 6px;
+  }
+
+  .search {
+    width: 100%;
+  }
+
+  .search__hint {
+    display: none; // no "/" key worth advertising on touch screens
+  }
+}
+
+// ---- Sections ------------------------------------------------------------
+
+.directory__sections {
+  padding-block: 0 96px;
+}
+
+.section {
+  padding-top: 56px;
+
+  &:first-child {
+    padding-top: 32px;
+
+    .section__head {
+      padding-top: 0;
+
+      &::before {
+        display: none; // the filter bar already draws a rule right above
+      }
+    }
+  }
+}
+
+.section__head {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: baseline;
+  column-gap: 14px;
+  row-gap: 4px;
+  margin-bottom: 24px;
+  padding-top: 14px;
+
+  // The rule above each heading draws itself in from the left.
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto;
+    height: 1px;
+    background: var(--line);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 1s var(--ease-out);
+  }
+
+  > * {
+    opacity: 0;
+    transform: translateY(14px);
+    transition:
+      opacity 0.6s ease,
+      transform 0.7s var(--ease-out);
+  }
+
+  .section__title {
+    transition-delay: 0.06s;
+  }
+
+  .section__blurb {
+    transition-delay: 0.12s;
+  }
+
+  .is-in & {
+    &::before {
+      transform: scaleX(1);
+    }
+
+    > * {
+      opacity: 1;
+      transform: none;
+    }
+  }
+}
+
+.section__index {
+  color: var(--accent);
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+}
+
+.section__title {
+  font-family: var(--font-display);
+  font-size: clamp(1.6rem, 3vw, 2.1rem);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.15;
+}
+
+.section__blurb {
+  grid-column: 2;
+  max-width: 56ch;
+  color: var(--text-muted);
+  font-size: 0.95rem;
+}
+
+.grid {
+  display: grid;
+  gap: 16px;
+}
+
+.grid--cards {
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 270px), 1fr));
+  gap: 20px;
+}
+
+.grid--channels {
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 230px), 1fr));
+  gap: 10px;
+}
+
+// ---- Empty state ---------------------------------------------------------
+
+.empty {
+  padding: 96px 0;
+  max-width: 46ch;
+
+  button,
+  a {
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--text);
+    text-decoration: underline;
+    text-decoration-color: var(--accent);
+    text-underline-offset: 3px;
+    cursor: pointer;
+  }
+}
+
+.empty__title {
+  margin-bottom: 8px;
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  font-weight: 600;
+}
+
+.empty__body {
+  color: var(--text-muted);
+}

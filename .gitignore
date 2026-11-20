@@ -21,3 +21,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Build output (CI builds a fresh copy on every push)
+dist
